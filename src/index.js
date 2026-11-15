@@ -209,17 +209,38 @@ async function handleTelegram(request, env) {
 
 /* ---------------- курс BNR ---------------- */
 
-async function refreshRates(env) {
-  const r = await fetch('https://www.bnr.ro/nbrfxrates.xml', { cf: { cacheTtl: 600 } });
-  if (!r.ok) throw new Error('BNR ' + r.status);
+async function ratesFromBNR() {
+  const r = await fetch('https://www.bnr.ro/nbrfxrates.xml', {
+    headers: { 'user-agent': 'Mozilla/5.0 (compatible; padel-coach/1.0)', accept: 'application/xml,text/xml,*/*' },
+  });
+  if (!r.ok) throw new Error('BNR HTTP ' + r.status);
   const xml = await r.text();
   const out = {};
-  for (const m of xml.matchAll(/<Rate currency="(USD|UAH)"(?:\s+multiplier="(\d+)")?>([\d.]+)<\/Rate>/g)) {
+  for (const m of xml.matchAll(/<Rate\s+currency="(USD|UAH)"(?:\s+multiplier="(\d+)")?\s*>\s*([\d.]+)\s*<\/Rate>/g)) {
     out[m[1]] = parseFloat(m[3]) / (m[2] ? parseInt(m[2], 10) : 1);
   }
-  const d = xml.match(/<Cube date="([\d-]+)"/);
+  const d = xml.match(/<Cube\s+date="([\d-]+)"/);
   if (!out.USD || !out.UAH) throw new Error('BNR parse');
-  const rates = { USD: out.USD, UAH: out.UAH, date: d ? d[1] : null, fetched: now() };
+  return { USD: out.USD, UAH: out.UAH, date: d ? d[1] : null, source: 'BNR' };
+}
+
+// запасной источник, если сайт BNR не ответил
+async function ratesFromBackup() {
+  const r = await fetch('https://open.er-api.com/v6/latest/RON');
+  if (!r.ok) throw new Error('backup HTTP ' + r.status);
+  const j = await r.json();
+  if (!j || !j.rates || !j.rates.USD || !j.rates.UAH) throw new Error('backup parse');
+  const date = j.time_last_update_unix ? new Date(j.time_last_update_unix * 1000).toISOString().slice(0, 10) : null;
+  return { USD: +(1 / j.rates.USD).toFixed(4), UAH: +(1 / j.rates.UAH).toFixed(4), date, source: 'er-api' };
+}
+
+async function refreshRates(env) {
+  let rates, err = '';
+  try { rates = await ratesFromBNR(); } catch (e) { err = e.message; }
+  if (!rates) {
+    try { rates = await ratesFromBackup(); } catch (e) { throw new Error(err + '; ' + e.message); }
+  }
+  rates.fetched = now();
   await kvSet(env, 'rates', rates);
   return rates;
 }
@@ -373,8 +394,8 @@ async function handleSetup(request, env, url) {
     ],
   });
   let ratesNote = '';
-  try { const r = await refreshRates(env); ratesNote = `Курс BNR загружен: 1 USD = ${r.USD} lei, 1 UAH = ${r.UAH} lei (${r.date}).`; }
-  catch { ratesNote = 'Курс BNR пока не загрузился — попробуется автоматически позже.'; }
+  try { const r = await refreshRates(env); ratesNote = `Курс загружен (${r.source}): 1 USD = ${r.USD} lei, 1 UAH = ${r.UAH} lei (${r.date}).`; }
+  catch (e) { ratesNote = `Курс пока не загрузился (${e.message}) — попробуется автоматически позже.`; }
   const owner = await kvGet(env, 'owner');
   const claim = `https://t.me/${me.result.username}?start=${env.SETUP_CODE}`;
   const html = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
