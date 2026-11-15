@@ -10,7 +10,16 @@
  */
 
 const DAY = 86400;
-const LANGS = ['ro', 'en', 'uk'];
+const LANGS = ['uk', 'en'];
+
+// Заявка в Telegram всегда на русском
+const RU = {
+  formats: ['Индивидуально', 'Вдвоём', 'Группа', 'Пакет 10'],
+  times: ['Утро', 'День', 'Вечер', 'Выходные'],
+  levels: ['Никогда не держал ракетку', 'Играл пару раз с друзьями', 'Играет регулярно', 'Хочет играть с друзьями или коллегами'],
+  tags: { tennis: 'Играл в теннис', partner: 'Есть партнёр', group: 'Хочет в группу', racket: 'Есть своя ракетка' },
+  langs: { uk: 'украинская', en: 'английская' },
+};
 
 /* ---------------- helpers ---------------- */
 
@@ -38,6 +47,10 @@ async function init(env) {
       'CREATE TABLE IF NOT EXISTS leads (id INTEGER PRIMARY KEY AUTOINCREMENT, created_at INTEGER, name TEXT, contact TEXT, format TEXT, time TEXT, lang TEXT)'
     ),
   ]);
+  // новые поля заявки (для уже созданной таблицы)
+  for (const col of ['level TEXT', 'about TEXT']) {
+    try { await env.DB.prepare('ALTER TABLE leads ADD COLUMN ' + col).run(); } catch (e) { /* колонка уже есть */ }
+  }
   initialized = true;
 }
 
@@ -124,7 +137,12 @@ async function sendLeads(env, chatId) {
   const { results } = await env.DB.prepare('SELECT * FROM leads ORDER BY id DESC LIMIT 5').all();
   if (!results.length) return tg(env, 'sendMessage', { chat_id: chatId, text: 'Заявок пока нет.' });
   const text = results
-    .map((l) => `${new Date(l.created_at * 1000).toLocaleString('ru-RU', { timeZone: 'Europe/Bucharest' })}\n${l.name || '—'} · ${l.contact}\n${l.format || ''} · ${l.time || ''} · ${(l.lang || '').toUpperCase()}`)
+    .map((l) => [
+      new Date(l.created_at * 1000).toLocaleString('ru-RU', { timeZone: 'Europe/Bucharest' }),
+      `${l.name || '—'} · ${l.contact}`,
+      [l.format, l.time, l.level].filter(Boolean).join(' · '),
+      l.about || '',
+    ].filter(Boolean).join('\n'))
     .join('\n\n');
   return tg(env, 'sendMessage', { chat_id: chatId, text: 'Последние заявки:\n\n' + text });
 }
@@ -214,22 +232,34 @@ async function handleLead(request, env, ctx) {
   const b = await request.json().catch(() => null);
   if (!b) return json({ ok: false }, 400);
   if (b.website) return json({ ok: true }); // ловушка для ботов
+  const tagList = Array.isArray(b.tags) ? b.tags.filter((x) => RU.tags[x]).map((x) => RU.tags[x]) : [];
+  const about = [tagList.join(', '), clip(b.about, 600)].filter(Boolean).join('\n');
   const lead = {
     name: clip(b.name, 80),
     contact: clip(b.contact, 80),
-    format: clip(b.format, 40),
-    time: clip(b.time, 40),
-    lang: LANGS.includes(b.lang) ? b.lang : 'ro',
+    format: RU.formats[b.format] || '',
+    time: RU.times[b.time] || '',
+    level: b.level === null || b.level === undefined ? '' : RU.levels[b.level] || '',
+    about,
+    lang: LANGS.includes(b.lang) ? b.lang : 'uk',
   };
   if (lead.contact.length < 3) return json({ ok: false, error: 'contact' }, 400);
-  await env.DB.prepare('INSERT INTO leads (created_at, name, contact, format, time, lang) VALUES (?, ?, ?, ?, ?, ?)')
-    .bind(now(), lead.name, lead.contact, lead.format, lead.time, lead.lang).run();
+  await env.DB.prepare('INSERT INTO leads (created_at, name, contact, format, time, lang, level, about) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(now(), lead.name, lead.contact, lead.format, lead.time, lead.lang, lead.level, lead.about).run();
   const owner = await kvGet(env, 'owner');
   if (owner) {
-    ctx.waitUntil(tg(env, 'sendMessage', {
-      chat_id: owner.id,
-      text: `Новая заявка с сайта\n\nИмя: ${lead.name || '—'}\nКонтакт: ${lead.contact}\nФормат: ${lead.format || '—'}\nВремя: ${lead.time || '—'}\nЯзык сайта: ${lead.lang.toUpperCase()}`,
-    }));
+    const lines = [
+      'Новая заявка с сайта',
+      '',
+      `Имя: ${lead.name || '—'}`,
+      `Контакт: ${lead.contact}`,
+      `Формат: ${lead.format || '—'}`,
+      `Удобное время: ${lead.time || '—'}`,
+      `Уровень: ${lead.level || 'не указан'}`,
+      `О себе: ${lead.about || '—'}`,
+      `Версия сайта: ${RU.langs[lead.lang]}`,
+    ];
+    ctx.waitUntil(tg(env, 'sendMessage', { chat_id: owner.id, text: lines.join('\n') }));
   }
   return json({ ok: true });
 }
