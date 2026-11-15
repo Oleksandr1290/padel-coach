@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Редактор сайта</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{--ink:#0B0D0A;--ink2:#11140D;--card:#15180F;--line:#23271F;--line2:#343A2C;--line3:#4A5140;--paper:#F2F1EA;--muted:#A3A69A;--soft:#C7C9BE;--acc:#D4FF3A;--err:#FF8A6B}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--paper);font-family:'Manrope',system-ui,sans-serif;font-size:16px;line-height:1.5;padding-bottom:120px}
+a{color:var(--acc)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px}
+header{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(11,13,10,.92);backdrop-filter:blur(10px);z-index:20}
+header .wrap{display:flex;align-items:center;gap:14px;min-height:68px;flex-wrap:wrap}
+.emb{width:40px;height:40px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;flex:none}
+header h1{font-family:'Unbounded',sans-serif;font-size:16px;margin:0;flex:1}
+header h1 small{display:block;font-family:'Manrope',system-ui,sans-serif;font-weight:500;font-size:13px;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border-radius:999px;font-weight:700;border:1.5px solid var(--line3);background:transparent;color:var(--paper);text-decoration:none;font-size:15px}
+.btn:hover{border-color:var(--paper)}
+.btn-acc{background:var(--acc);border-color:var(--acc);color:var(--ink)}
+.btn-acc:hover{border-color:var(--acc);filter:brightness(1.05)}
+.btn-sm{min-height:36px;padding:6px 12px;font-size:13px}
+.btn-danger{border-color:#5a2f24;color:var(--err)}
+.btn[disabled]{opacity:.5;cursor:default}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:16px 0;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;min-height:44px;padding:10px 16px;border-radius:999px;border:1.5px solid var(--line2);background:transparent;color:var(--paper);font-weight:600;font-size:15px}
+.tab[aria-selected="true"]{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+h2{font-family:'Unbounded',sans-serif;font-size:24px;margin:12px 0 6px}
+.hint{color:var(--muted);font-size:14px;margin:0 0 20px}
+.group{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:16px}
+.group>h3{margin:0 0 16px;font-size:17px}
+.field{margin-bottom:18px}
+.field:last-child{margin-bottom:0}
+.flabel{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.flabel b{font-size:15px}
+.tr{display:flex;gap:6px;flex-wrap:wrap}
+.tri{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:720px){.tri{grid-template-columns:1fr}}
+.lang{display:flex;flex-direction:column;gap:4px}
+.lang label{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+input[type=text],input[type=number],input[type=url],input[type=date],textarea,select{width:100%;font:inherit;background:var(--ink2);color:var(--paper);border:1.5px solid var(--line2);border-radius:12px;padding:10px 12px;min-height:44px}
+textarea{resize:vertical;min-height:44px}
+textarea.tall{min-height:260px;font-size:15px}
+input:focus,textarea:focus,select:focus{border-color:var(--line3)}
+.prices{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.price{background:var(--ink2);border:1px solid var(--line2);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.price .conv{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted)}
+.lei{display:flex;align-items:center;gap:8px}
+.lei span{font-weight:700}
+.photo-row{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.photo-prev{width:180px;aspect-ratio:4/5;border-radius:18px;background:repeating-linear-gradient(135deg,#15180F 0 12px,#1A1E14 12px 24px);border:1px solid var(--line2);overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;text-align:center;padding:10px}
+.photo-prev.wide{width:260px;aspect-ratio:16/10}
+.photo-prev img{width:100%;height:100%;object-fit:cover}
+.list-item{display:flex;align-items:center;gap:12px;justify-content:space-between;background:var(--ink2);border:1px solid var(--line2);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.list-item .t{font-weight:700}
+.list-item .m{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (max-width:620px){.grid2{grid-template-columns:1fr}}
+.lead{background:var(--ink2);border:1px solid var(--line2);border-radius:14px;padding:14px;margin-bottom:8px}
+.lead .when{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+.savebar{position:fixed;left:0;right:0;bottom:0;background:var(--acc);color:var(--ink);z-index:30;transform:translateY(110%);transition:transform .2s}
+.savebar.show{transform:none}
+.savebar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:72px}
+.savebar b{font-size:15px}
+.savebar .btn{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.toast{position:fixed;left:50%;top:84px;transform:translateX(-50%);background:var(--paper);color:var(--ink);padding:12px 18px;border-radius:12px;font-weight:700;z-index:40;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.center{min-height:70vh;display:flex;align-items:center;justify-content:center;text-align:center}
+.center .box{max-width:460px;display:flex;flex-direction:column;gap:16px;align-items:center}
+.code{font-family:'JetBrains Mono',monospace;background:var(--ink2);border:1px solid var(--line2);padding:12px;border-radius:12px;word-break:break-all;font-size:13px;width:100%}
+.warn{border:1px solid #5a2f24;background:#1b120e;border-radius:14px;padding:14px;color:#f0c3b6;font-size:14px}
+.md-help{font-size:13px;color:var(--muted);background:var(--ink2);border:1px dashed var(--line2);border-radius:12px;padding:10px 12px;margin-top:8px;line-height:1.6}
+.md-help code{font-family:'JetBrains Mono',monospace;color:var(--paper)}
+.cover-pick{display:flex;gap:8px;flex-wrap:wrap}
+.cover-pick button{width:60px;height:40px;border-radius:10px;border:2px solid var(--line2);background:var(--ink2);color:var(--paper);font-weight:700}
+.cover-pick button[aria-pressed="true"]{border-color:var(--acc);color:var(--acc)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <span class="emb" aria-hidden="true"><svg viewBox="0 0 240 240" width="30" height="30"><path d="M96 200 V40 H136 A44 44 0 0 1 136 128 H96" fill="none" stroke="#0B0D0A" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><path d="M170 24 L134 200 H204" fill="none" stroke="#D4FF3A" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/><path d="M170 24 L134 200 H204" fill="none" stroke="#0B0D0A" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><path d="M150 42 A44 44 0 0 1 178 70" fill="none" stroke="#D4FF3A" stroke-width="40"/><path d="M136 40 A44 44 0 0 1 180 84" fill="none" stroke="#0B0D0A" stroke-width="20" stroke-linecap="round"/></svg></span>
+    <h1>Редактор сайта<small id="who">…</small></h1>
+    <a class="btn btn-sm" href="/" target="_blank" rel="noopener">Открыть сайт</a>
+  </div>
+</header>
+
+<div id="login" class="wrap center" hidden>
+  <div class="box">
+    <h2>Вход через Telegram</h2>
+    <p class="hint" style="margin:0">Редактировать сайт может только владелец. Напиши боту команду <b>/menu</b> и нажми «Открыть редактор сайта».</p>
+    <a class="btn btn-acc" id="bot-link" href="#" target="_blank" rel="noopener">Открыть бота</a>
+  </div>
+</div>
+
+<main id="app" class="wrap" hidden>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <section id="panel"></section>
+</main>
+
+<div class="savebar" id="savebar" role="region" aria-label="Сохранение">
+  <div class="wrap"><b>Есть несохранённые изменения</b><button type="button" class="btn" id="save">Сохранить</button></div>
+</div>
+
+<script src="/content-defaults.js"></script>
+<script>
+(() => {
+const DEF = window.DEF;
+const L3 = ['ro', 'en', 'uk'];
+const LN = { ro: 'RO', en: 'EN', uk: 'UA' };
+const RICH = { 'hero.h1': 1, 'about.cert': 1 };
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+
+const GROUPS = [
+  ['Главный экран', [['coachName', 'Имя тренера (шапка, подвал)'], ['hero.badge', 'Плашка над заголовком'], ['hero.h1', 'Большой заголовок — вторая строка будет салатовой', 2], ['hero.lead', 'Текст под заголовком', 3], ['hero.meta1', 'Клуб и город'], ['hero.meta2', 'Форматы (мелко под кнопками)']]],
+  ['Обо мне', [['about.h2', 'Заголовок блока'], ['about.p1', 'Абзац 1 — о себе', 4], ['about.p2', 'Абзац 2 — подход к тренировкам', 4], ['about.cert', 'Сертификат — во второй строке организация и год', 2], ['stat1.v', 'Цифра 1'], ['stat1.l', 'Подпись к цифре 1'], ['stat2.v', 'Цифра 2'], ['stat2.l', 'Подпись к цифре 2'], ['stat3.v', 'Цифра 3'], ['stat3.l', 'Подпись к цифре 3']]],
+  ['Цены и запись', [['formats.p', 'Текст рядом с заголовком «Форматы и цены»', 3], ['trial.t', 'Пробная тренировка — текст перед ценой'], ['book.p', 'Текст в блоке записи', 3]]],
+  ['Клуб и расписание', [['foot.club', 'Название клуба'], ['foot.addr', 'Адрес'], ['foot.s1', 'Расписание — строка 1'], ['foot.s2', 'Расписание — строка 2']]],
+];
+const PRICE_NAMES = { private: 'Индивидуально, за занятие', split: 'Вдвоём, за человека', group: 'Группа, за человека', pack: 'Пакет 10 тренировок', trial: 'Пробная тренировка' };
+const CAT_NAMES = { technique: 'Техника', tactics: 'Тактика', gear: 'Снаряжение', beginners: 'Новичкам' };
+
+let C = null, RATES = DEF.RATES, dirty = false, tab = 'texts', editing = null, leads = null, owner = null;
+
+/* ---------- данные ---------- */
+function plain(v, key) {
+  let s = String(v || '');
+  if (RICH[key]) s = s.replace(/<br>\s*<span>/g, '\n');
+  return s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&');
+}
+function build(content) {
+  const c = content || {};
+  const out = {};
+  out.prices = { ...DEF.PRICES, ...(c.prices || {}) };
+  out.texts = {};
+  for (const [, fields] of GROUPS) for (const [k] of fields) {
+    const saved = (c.texts && c.texts[k]) || {};
+    out.texts[k] = {};
+    for (const l of L3) out.texts[k][l] = saved[l] != null && saved[l] !== '' ? saved[l] : plain(DEF.T[k] && DEF.T[k][l], k);
+  }
+  out.faq = Array.isArray(c.faq) && c.faq.length ? clone(c.faq)
+    : DEF.FAQ.ro.map((_, i) => ({ q: Object.fromEntries(L3.map(l => [l, DEF.FAQ[l][i][0]])), a: Object.fromEntries(L3.map(l => [l, DEF.FAQ[l][i][1]])) }));
+  out.contacts = { phone: '', whatsapp: '', telegram: '', instagram: '', map: '', ...(c.contacts || {}) };
+  out.photos = { ...(c.photos || {}) };
+  out.posts = Array.isArray(c.posts) && c.posts.length ? clone(c.posts) : clone(DEF.POSTS);
+  return out;
+}
+
+function getV(id, l) {
+  const [kind, a, b] = id.split('|');
+  if (kind === 'text') return C.texts[a][l];
+  if (kind === 'faq') return C.faq[+a][b][l];
+  if (kind === 'post') return (editing[l] || {})[a] || '';
+}
+function setV(id, l, v) {
+  const [kind, a, b] = id.split('|');
+  if (kind === 'text') C.texts[a][l] = v;
+  else if (kind === 'faq') C.faq[+a][b][l] = v;
+  else if (kind === 'post') { editing[l] = editing[l] || {}; editing[l][a] = v; }
+  markDirty();
+}
+
+function markDirty() { dirty = true; $('#savebar').classList.add('show'); }
+function toast(msg) {
+  const el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status'); el.textContent = msg;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 2600);
+}
+
+/* ---------- поля ---------- */
+function tri(id, label, rows = 1, tall = false) {
+  const inputs = L3.map(l => {
+    const v = esc(getV(id, l));
+    const fid = 'f-' + id.replace(/[^a-z0-9]/gi, '_') + '-' + l;
+    const ctl = rows > 1 || tall
+      ? `<textarea id="${fid}" rows="${rows}" class="${tall ? 'tall' : ''}" data-id="${id}" data-l="${l}">${v}</textarea>`
+      : `<input id="${fid}" type="text" data-id="${id}" data-l="${l}" value="${v}">`;
+    return `<div class="lang"><label for="${fid}">${LN[l]}</label>${ctl}</div>`;
+  }).join('');
+  const tr = L3.map(l => `<button type="button" class="btn btn-sm" data-tr="${id}" data-from="${l}" title="Перевести с ${LN[l]} на остальные языки">${LN[l]} → все</button>`).join('');
+  return `<div class="field"><div class="flabel"><b>${label}</b><div class="tr" aria-label="Автоперевод">${tr}</div></div><div class="tri">${inputs}</div></div>`;
+}
+
+/* ---------- вкладки ---------- */
+const TABS = [['texts', 'Тексты'], ['prices', 'Цены'], ['photo', 'Фото и контакты'], ['faq', 'Вопросы'], ['blog', 'Блог'], ['leads', 'Заявки'], ['owner', 'Владелец']];
+
+function renderTabs() {
+  $('#tabs').innerHTML = TABS.map(([k, n]) => `<button type="button" role="tab" class="tab" data-tab="${k}" aria-selected="${k === tab}">${n}</button>`).join('');
+}
+
+function money(lei) {
+  return `≈ $${Math.round(lei / RATES.USD)} · ≈ ${Math.round(lei / RATES.UAH / 10) * 10} грн`;
+}
+
+function renderPanel() {
+  const P = $('#panel');
+  if (tab === 'texts') {
+    P.innerHTML = `<h2>Тексты</h2><p class="hint">Меняй текст в одном языке и нажми «RO → все», «EN → все» или «UA → все» — остальные языки переведутся автоматически. Перевод лучше проверить глазами.</p>` +
+      GROUPS.map(([g, fields]) => `<div class="group"><h3>${g}</h3>${fields.map(([k, n, r]) => tri('text|' + k, n, r || 1)).join('')}</div>`).join('');
+  }
+  else if (tab === 'prices') {
+    P.innerHTML = `<h2>Цены</h2><p class="hint">Цены вводятся только в леях. На английской версии сайта они показываются в долларах, на украинской — в гривнах по курсу Нацбанка Румынии (обновляется каждый день).</p>
+      <div class="group"><div class="prices">${Object.keys(PRICE_NAMES).map(k => `<div class="price"><label for="p-${k}"><b>${PRICE_NAMES[k]}</b></label><div class="lei"><input id="p-${k}" type="number" min="0" step="5" inputmode="numeric" data-price="${k}" value="${C.prices[k]}"><span>lei</span></div><span class="conv" id="conv-${k}">${money(C.prices[k])}</span></div>`).join('')}</div></div>
+      <div class="row"><span class="hint" style="margin:0">Курс: 1 $ = ${RATES.USD} lei · 1 грн = ${RATES.UAH} lei ${RATES.date ? '(' + RATES.date + ')' : ''}</span><button type="button" class="btn btn-sm" id="rates">Обновить курс сейчас</button></div>`;
+  }
+  else if (tab === 'photo') {
+    const ph = C.photos.coach;
+    P.innerHTML = `<h2>Фото и контакты</h2>
+      <div class="group"><h3>Фото тренера (блок «Обо мне»)</h3><div class="photo-row"><div class="photo-prev">${ph ? `<img src="${esc(ph)}" alt="Фото тренера">` : 'Фото не загружено'}</div>
+      <div style="display:flex;flex-direction:column;gap:10px"><p class="hint" style="margin:0;max-width:340px">Лучше вертикальное фото на корте, в движении. Можно прямо с телефона — сайт сам уменьшит его.</p>
+      <label class="btn btn-acc" style="align-self:flex-start">Выбрать фото<input type="file" accept="image/*" data-upload="coach" hidden></label>
+      ${ph ? '<button type="button" class="btn btn-sm btn-danger" data-rmphoto="coach" style="align-self:flex-start">Убрать фото</button>' : ''}</div></div></div>
+      <div class="group"><h3>Контакты</h3><div class="grid2">
+      ${[['phone', 'Телефон', '+40 7XX XXX XXX'], ['whatsapp', 'WhatsApp (если номер другой)', '+40 7XX XXX XXX'], ['telegram', 'Telegram — ник', '@username'], ['instagram', 'Instagram — ник', '@username'], ['map', 'Ссылка на клуб в Google Maps', 'https://maps.app.goo.gl/…']]
+        .map(([k, n, ph]) => `<div class="lang"><label for="c-${k}" style="font-family:Manrope,system-ui,sans-serif;font-size:14px;color:var(--soft)">${n}</label><input id="c-${k}" type="text" data-contact="${k}" placeholder="${ph}" value="${esc(C.contacts[k])}"></div>`).join('')}
+      </div></div>`;
+  }
+  else if (tab === 'faq') {
+    P.innerHTML = `<h2>Вопросы</h2><p class="hint">Блок «Перед первой тренировкой».</p>` +
+      C.faq.map((f, i) => `<div class="group"><div class="row" style="justify-content:space-between;margin-bottom:12px"><h3 style="margin:0">Вопрос ${i + 1}</h3><div class="row">
+        ${i > 0 ? `<button type="button" class="btn btn-sm" data-faqup="${i}" aria-label="Поднять выше">↑</button>` : ''}
+        <button type="button" class="btn btn-sm btn-danger" data-faqdel="${i}">Удалить</button></div></div>
+        ${tri(`faq|${i}|q`, 'Вопрос')}${tri(`faq|${i}|a`, 'Ответ', 3)}</div>`).join('') +
+      `<button type="button" class="btn btn-acc" id="faqadd">Добавить вопрос</button>`;
+  }
+  else if (tab === 'blog') {
+    if (editing) return renderPost();
+    P.innerHTML = `<h2>Блог</h2><p class="hint">Первые три статьи показываются на главной в блоке «Советы тренера».</p>
+      <button type="button" class="btn btn-acc" id="postnew" style="margin-bottom:16px">Новая статья</button>` +
+      C.posts.map((p, i) => `<div class="list-item"><div><div class="t">${esc((p.uk && p.uk.t) || (p.ro && p.ro.t) || 'Без названия')}</div><div class="m">${CAT_NAMES[p.cat] || ''} · ${esc(p.date || '')}</div></div>
+        <div class="row">${i > 0 ? `<button type="button" class="btn btn-sm" data-postup="${i}" aria-label="Поднять выше">↑</button>` : ''}<button type="button" class="btn btn-sm" data-postedit="${i}">Изменить</button><button type="button" class="btn btn-sm btn-danger" data-postdel="${i}">Удалить</button></div></div>`).join('');
+  }
+  else if (tab === 'leads') {
+    P.innerHTML = `<h2>Заявки</h2><p class="hint">Новые заявки также сразу приходят владельцу в Telegram.</p><div id="leads">Загрузка…</div>`;
+    loadLeads();
+  }
+  else if (tab === 'owner') {
+    P.innerHTML = `<h2>Владелец</h2>
+      <div class="group"><h3>Сейчас владелец: ${esc(owner || '—')}</h3><p class="hint" style="margin:0">Только владелец может открыть этот редактор, и только ему приходят заявки в Telegram.</p></div>
+      <div class="group"><h3>Передать права</h3>
+      <p class="hint">Создай ссылку и отправь её новому владельцу. Когда он откроет её в Telegram и нажмёт «Start», он станет владельцем, а твой доступ закроется. Ссылка действует 24 часа и срабатывает один раз.</p>
+      <div class="warn" style="margin-bottom:14px">Сайт по-прежнему будет работать на твоём аккаунте Cloudflare, поэтому технический доступ к нему у тебя останется.</div>
+      <button type="button" class="btn btn-acc" id="transfer">Создать ссылку передачи</button><div id="transfer-out" style="margin-top:14px"></div></div>
+      <button type="button" class="btn btn-danger" id="logout">Выйти из редактора</button>`;
+  }
+}
+
+function renderPost() {
+  const p = editing;
+  $('#panel').innerHTML = `<button type="button" class="btn btn-sm" id="postback" style="margin-top:8px">← Ко всем статьям</button>
+    <h2>${p._new ? 'Новая статья' : 'Статья'}</h2>
+    <div class="group"><div class="grid2">
+      <div class="lang"><label for="pm-cat" style="font-family:Manrope,system-ui,sans-serif;font-size:14px;color:var(--soft)">Рубрика</label><select id="pm-cat" data-pm="cat">${Object.keys(CAT_NAMES).map(k => `<option value="${k}" ${p.cat === k ? 'selected' : ''}>${CAT_NAMES[k]}</option>`).join('')}</select></div>
+      <div class="lang"><label for="pm-date" style="font-family:Manrope,system-ui,sans-serif;font-size:14px;color:var(--soft)">Дата</label><input id="pm-date" type="date" data-pm="date" value="${esc(p.date || '')}"></div>
+      <div class="lang"><label for="pm-min" style="font-family:Manrope,system-ui,sans-serif;font-size:14px;color:var(--soft)">Минут на чтение</label><input id="pm-min" type="number" min="1" max="60" data-pm="min" value="${esc(p.min || '')}"></div>
+      <div class="lang"><label for="pm-vurl" style="font-family:Manrope,system-ui,sans-serif;font-size:14px;color:var(--soft)">Ссылка на видео YouTube (если это видео-совет)</label><input id="pm-vurl" type="url" data-pm="videoUrl" placeholder="https://youtube.com/shorts/…" value="${esc(p.videoUrl || '')}"></div>
+      <div class="lang"><label for="pm-vlen" style="font-family:Manrope,system-ui,sans-serif;font-size:14px;color:var(--soft)">Длина видео (например 0:45)</label><input id="pm-vlen" type="text" data-pm="video" value="${esc(p.video || '')}"></div>
+    </div></div>
+    <div class="group"><h3>Обложка</h3><div class="photo-row"><div class="photo-prev wide">${p.coverImg ? `<img src="${esc(p.coverImg)}" alt="Обложка">` : 'Рисунок корта №' + (p.cover || 1)}</div>
+      <div style="display:flex;flex-direction:column;gap:10px"><label class="btn btn-acc" style="align-self:flex-start">Загрузить фото<input type="file" accept="image/*" data-upload="post" hidden></label>
+      ${p.coverImg ? '<button type="button" class="btn btn-sm btn-danger" id="rmcover" style="align-self:flex-start">Убрать фото, вернуть рисунок</button>' : `<div><p class="hint" style="margin:0 0 6px">Или выбери рисунок:</p><div class="cover-pick">${[1, 2, 3, 4].map(n => `<button type="button" data-cov="${n}" aria-pressed="${(p.cover || 1) === n}">№${n}</button>`).join('')}</div></div>`}</div></div></div>
+    <div class="group">${tri('post|t', 'Заголовок')}${tri('post|e', 'Краткое описание (для карточки)', 2)}${tri('post|b', 'Текст статьи', 10, true)}
+      <div class="md-help">Как оформлять текст: абзацы разделяй пустой строкой · <code>## Подзаголовок</code> · <code>**жирный**</code> · <code>&gt; **Совет:** текст</code> — выделенный блок · <code>[video]</code> — место для видео.</div></div>
+    <div class="row"><button type="button" class="btn btn-acc" id="postdone">Готово</button><span class="hint" style="margin:0">После «Готово» не забудь нажать «Сохранить».</span></div>`;
+}
+
+async function loadLeads() {
+  const r = await api('/api/admin/leads'); if (!r) return;
+  const el = $('#leads'); if (!el) return;
+  el.innerHTML = r.leads.length ? r.leads.map(l => `<div class="lead"><div class="when">${new Date(l.created_at * 1000).toLocaleString('ru-RU')} · ${esc((l.lang || '').toUpperCase())}</div><b>${esc(l.name || '—')}</b> · ${esc(l.contact)}<br><span style="color:var(--muted)">${esc(l.format || '')} · ${esc(l.time || '')}</span></div>`).join('') : '<p class="hint">Заявок пока нет.</p>';
+}
+
+/* ---------- API ---------- */
+async function api(url, opts = {}) {
+  const r = await fetch(url, { credentials: 'same-origin', ...opts });
+  if (r.status === 401) { showLogin((await r.json().catch(() => ({}))).bot); return null; }
+  const d = await r.json().catch(() => null);
+  if (!r.ok || !d || d.ok === false) { toast('Ошибка: ' + ((d && d.error) || r.status)); return null; }
+  return d;
+}
+function showLogin(bot) {
+  $('#app').hidden = true; $('#login').hidden = false; $('#savebar').classList.remove('show');
+  $('#who').textContent = 'вход не выполнен';
+  if (bot) $('#bot-link').href = 'https://t.me/' + bot; else $('#bot-link').hidden = true;
+}
+
+async function save() {
+  if (editing) commitPost();
+  $('#save').disabled = true;
+  const r = await api('/api/admin/content', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(C) });
+  $('#save').disabled = false;
+  if (r) { dirty = false; $('#savebar').classList.remove('show'); toast('Сохранено — изменения уже на сайте'); }
+}
+
+async function translateField(id, from) {
+  const text = getV(id, from);
+  if (!text || !text.trim()) { toast('Сначала заполни ' + LN[from]); return; }
+  toast('Перевожу…');
+  const r = await api('/api/admin/translate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text, from }) });
+  if (!r) return;
+  for (const l of Object.keys(r.result)) {
+    setV(id, l, r.result[l]);
+    const el = document.querySelector(`[data-id="${CSS.escape(id)}"][data-l="${l}"]`); if (el) el.value = r.result[l];
+  }
+  toast('Готово — проверь перевод');
+}
+
+function resizeImage(file, max = 1600) {
+  return new Promise((res, rej) => {
+    const img = new Image(); const u = URL.createObjectURL(file);
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(u);
+      c.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/jpeg', 0.85);
+    };
+    img.onerror = () => rej(new Error('img')); img.src = u;
+  });
+}
+async function upload(file, target) {
+  toast('Загружаю фото…');
+  let blob; try { blob = await resizeImage(file); } catch (e) { toast('Не удалось открыть это фото'); return; }
+  const r = await api('/api/admin/image', { method: 'POST', headers: { 'content-type': 'image/jpeg' }, body: blob });
+  if (!r) return;
+  if (target === 'coach') C.photos.coach = r.url; else editing.coverImg = r.url;
+  markDirty(); renderPanel(); toast('Фото загружено — нажми «Сохранить»');
+}
+
+function newPost() {
+  const d = new Date().toISOString().slice(0, 10);
+  return { _new: true, slug: d + '-' + Math.random().toString(36).slice(2, 7), cat: 'technique', min: 3, date: d, cover: 1, ro: { t: '', e: '', b: '' }, en: { t: '', e: '', b: '' }, uk: { t: '', e: '', b: '' } };
+}
+function commitPost() {
+  const p = editing; if (!p) return;
+  const i = C.posts.findIndex(x => x.slug === p.slug);
+  const clean = { ...p }; delete clean._new;
+  if (i >= 0) C.posts[i] = clean; else C.posts.unshift(clean);
+}
+
+/* ---------- события ---------- */
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset.id) setV(el.dataset.id, el.dataset.l, el.value);
+  else if (el.dataset.price) { C.prices[el.dataset.price] = Math.max(0, Number(el.value) || 0); $('#conv-' + el.dataset.price).textContent = money(C.prices[el.dataset.price]); markDirty(); }
+  else if (el.dataset.contact) { C.contacts[el.dataset.contact] = el.value; markDirty(); }
+  else if (el.dataset.pm) { editing[el.dataset.pm] = el.dataset.pm === 'min' ? Number(el.value) || '' : el.value; markDirty(); }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.upload && el.files && el.files[0]) upload(el.files[0], el.dataset.upload);
+  if (el.dataset.pm === 'cat') { editing.cat = el.value; markDirty(); }
+});
+document.addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const d = b.dataset;
+  if (d.tab) { if (editing) { commitPost(); editing = null; } tab = d.tab; renderTabs(); renderPanel(); window.scrollTo(0, 0); return; }
+  if (d.tr) return translateField(d.tr, d.from);
+  if (b.id === 'save') return save();
+  if (b.id === 'rates') { const r = await api('/api/admin/rates', { method: 'POST' }); if (r) { RATES = r.rates; renderPanel(); toast('Курс обновлён'); } return; }
+  if (d.rmphoto) { delete C.photos[d.rmphoto]; markDirty(); renderPanel(); return; }
+  if (b.id === 'faqadd') { C.faq.push({ q: { ro: '', en: '', uk: '' }, a: { ro: '', en: '', uk: '' } }); markDirty(); renderPanel(); return; }
+  if (d.faqdel) { if (confirm('Удалить этот вопрос?')) { C.faq.splice(+d.faqdel, 1); markDirty(); renderPanel(); } return; }
+  if (d.faqup) { const i = +d.faqup; [C.faq[i - 1], C.faq[i]] = [C.faq[i], C.faq[i - 1]]; markDirty(); renderPanel(); return; }
+  if (b.id === 'postnew') { editing = newPost(); renderPanel(); window.scrollTo(0, 0); return; }
+  if (d.postedit) { editing = clone(C.posts[+d.postedit]); renderPanel(); window.scrollTo(0, 0); return; }
+  if (d.postdel) { if (confirm('Удалить статью?')) { C.posts.splice(+d.postdel, 1); markDirty(); renderPanel(); } return; }
+  if (d.postup) { const i = +d.postup; [C.posts[i - 1], C.posts[i]] = [C.posts[i], C.posts[i - 1]]; markDirty(); renderPanel(); return; }
+  if (b.id === 'postback' || b.id === 'postdone') {
+    if (b.id === 'postdone' && !L3.some(l => editing[l] && editing[l].t && editing[l].t.trim())) { toast('Добавь заголовок хотя бы на одном языке'); return; }
+    if (b.id === 'postdone' || !editing._new) commitPost();
+    editing = null; renderPanel(); window.scrollTo(0, 0); return;
+  }
+  if (d.cov) { editing.cover = +d.cov; markDirty(); renderPanel(); return; }
+  if (b.id === 'rmcover') { delete editing.coverImg; markDirty(); renderPanel(); return; }
+  if (b.id === 'transfer') {
+    if (dirty) { toast('Сначала сохрани изменения'); return; }
+    if (!confirm('Создать ссылку передачи прав? Тот, кто откроет её первым, станет владельцем сайта.')) return;
+    const r = await api('/api/admin/transfer', { method: 'POST' }); if (!r) return;
+    $('#transfer-out').innerHTML = `<div class="code" id="tlink">${esc(r.link)}</div><button type="button" class="btn btn-sm" id="tcopy" style="margin-top:8px">Скопировать</button>`;
+    return;
+  }
+  if (b.id === 'tcopy') { try { await navigator.clipboard.writeText($('#tlink').textContent); toast('Скопировано'); } catch (_) { toast('Выдели и скопируй вручную'); } return; }
+  if (b.id === 'logout') { await fetch('/api/logout', { method: 'POST' }); location.href = '/'; return; }
+});
+window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+/* ---------- старт ---------- */
+(async () => {
+  const me = await api('/api/admin/me'); if (!me) return;
+  owner = me.owner;
+  $('#who').textContent = owner ? 'владелец: ' + owner : '';
+  const r = await fetch('/api/content').then(x => x.json()).catch(() => ({}));
+  if (r.rates && r.rates.USD) RATES = r.rates;
+  C = build(r.content);
+  $('#app').hidden = false;
+  renderTabs(); renderPanel();
+})();
+})();
+</script>
+</body>
+</html>

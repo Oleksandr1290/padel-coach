@@ -1,0 +1,31 @@
+{
+  // Сайт тренера по паделу: Worker + статические файлы из ./public
+  "name": "padel-coach",
+  "main": "src/index.js",
+  "compatibility_date": "2025-11-01",
+
+  // Все запросы сначала идут в Worker; то, что он не обрабатывает, отдаётся из ./public
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+
+  // База данных D1 — вставь сюда ID базы из дашборда Cloudflare (Storage & Databases → D1)
+  "d1_databases": [
+    { "binding": "DB", "database_name": "padel-coach", "database_id": "ВСТАВЬ_ID_БАЗЫ_D1" }
+  ],
+
+  // Хранилище фото KV — вставь ID из дашборда (Storage & Databases → KV)
+  "kv_namespaces": [
+    { "binding": "IMAGES", "id": "ВСТАВЬ_ID_KV" }
+  ],
+
+  // Workers AI — автоперевод текстов в редакторе
+  "ai": { "binding": "AI" },
+
+  // Курс BNR обновляется каждый день в 12:00 UTC (BNR публикует около 13:00 по Бухаресту)
+  "triggers": { "crons": ["0 12 * * *"] },
+
+  "observability": { "enabled": true }
+}
