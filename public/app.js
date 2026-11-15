@@ -4,12 +4,13 @@ const D = window.DEF;
 const T = D.T, PRICES = { ...D.PRICES };
 let RATES = { ...D.RATES }, FAQ = D.FAQ, POSTS = D.POSTS;
 let CONTACTS = {}, PHOTO = null;
-const { MARQUEE, FACTS, WHO, LEVELS, FORMATS, STEPS, FORM_FORMATS, FORM_TIMES, CATS } = D;
+const { MARQUEE, FACTS, WHO, LEVELS, FORMATS, STEPS, FORM_FORMATS, FORM_TIMES, FORM_TAGS, CATS } = D;
 const RICH = { 'hero.h1': 1, 'about.cert': 1 }; // первая строка обычная, вторая — выделенная
 
-let lang = (() => { try { const s = localStorage.getItem('padel-lang'); if (['ro','en','uk'].includes(s)) return s; } catch (e) {}
-  const n = (navigator.language || '').toLowerCase(); return n.startsWith('uk') ? 'uk' : n.startsWith('ro') ? 'ro' : n.startsWith('en') ? 'en' : 'ro'; })();
-let level = 0, fmtSel = 0, timeSel = 2, faqOpen = 0, cat = 'all', sending = false;
+let lang = (() => { try { const s = localStorage.getItem('padel-lang'); if (['en','uk'].includes(s)) return s; } catch (e) {}
+  const n = (navigator.language || '').toLowerCase(); return n.startsWith('en') ? 'en' : 'uk'; })();
+let level = 0, levelChosen = false, fmtSel = 0, timeSel = 2, faqOpen = 0, cat = 'all', sending = false;
+const tags = new Set();
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -45,8 +46,7 @@ function applyContent(c, rates) {
 /* ---------- цены ---------- */
 function money(lei) {
   if (lang === 'en') { const v = Math.round(lei / RATES.USD); return { main: `≈ $${group(v)}`, sub: `${group(lei)} lei · ${t('payLei')}` }; }
-  if (lang === 'uk') { const v = Math.round(lei / RATES.UAH / 10) * 10; return { main: `≈ ${group(v)} грн`, sub: `${group(lei)} lei · ${t('payLei')}` }; }
-  return { main: `${group(lei)} lei`, sub: '' };
+  const v = Math.round(lei / RATES.UAH / 10) * 10; return { main: `≈ ${group(v)} грн`, sub: `${group(lei)} lei · ${t('payLei')}` };
 }
 
 /* ---------- статьи ---------- */
@@ -149,6 +149,9 @@ function render() {
 
   $('#chips-format').innerHTML = FORM_FORMATS[lang].map((x, i) => `<button type="button" class="chip" data-fmt="${i}" aria-pressed="${i === fmtSel}">${x}</button>`).join('');
   $('#chips-time').innerHTML = FORM_TIMES[lang].map((x, i) => `<button type="button" class="chip" data-time="${i}" aria-pressed="${i === timeSel}">${x}</button>`).join('');
+  $('#chips-level').innerHTML = LEVELS[lang].map((l, i) => `<button type="button" class="chip sm" data-flevel="${i}" aria-pressed="${levelChosen && i === level}">${l.l}</button>`).join('');
+  $('#chips-tags').innerHTML = FORM_TAGS[lang].map(([id, n]) => `<button type="button" class="chip sm" data-tag="${id}" aria-pressed="${tags.has(id)}">${n}</button>`).join('');
+  $('#f-about').placeholder = t('form.aboutPh');
   $('#f-name').placeholder = { ro: 'Cum să-ți spun', en: 'What should I call you', uk: 'Як до тебе звертатися' }[lang];
 
   const cats = ['all', ...Object.keys(CATS)];
@@ -193,18 +196,18 @@ async function sendLead() {
   if (sending) return;
   const err = $('#form-error');
   const contact = $('#f-contact').value.trim();
-  const msgs = { ro: ['Lasă un telefon sau un Telegram.', 'Nu s-a trimis. Încearcă din nou sau scrie-mi direct.'],
-                 en: ['Please leave a phone number or Telegram.', 'Couldn’t send. Try again or message me directly.'],
+  const msgs = { en: ['Please leave a phone number or Telegram.', 'Couldn’t send. Try again or message me directly.'],
                  uk: ['Залиш телефон або Telegram.', 'Не вдалося надіслати. Спробуй ще раз або напиши напряму.'] }[lang];
   if (contact.length < 3) { err.textContent = msgs[0]; err.hidden = false; $('#f-contact').focus(); return; }
   err.hidden = true; sending = true; $('#submit').disabled = true;
   try {
     const r = await fetch('/api/lead', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
       name: $('#f-name').value, contact, website: $('#f-website').value,
-      format: FORM_FORMATS.ro[fmtSel], time: FORM_TIMES.ro[timeSel], lang }) });
+      format: fmtSel, time: timeSel, level: levelChosen ? level : null,
+      about: $('#f-about').value, tags: [...tags], lang }) });
     if (!r.ok) throw new Error();
     $('#form-fields').hidden = true; $('#thanks').hidden = false;
-    $('#f-name').value = ''; $('#f-contact').value = '';
+    $('#f-name').value = ''; $('#f-contact').value = ''; $('#f-about').value = ''; tags.clear();
   } catch (e) { err.textContent = msgs[1]; err.hidden = false; }
   sending = false; $('#submit').disabled = false;
 }
@@ -214,7 +217,9 @@ document.addEventListener('click', e => {
   const b = e.target.closest('button');
   if (b) {
     if (b.dataset.lang) { lang = b.dataset.lang; try { localStorage.setItem('padel-lang', lang); } catch (_) {} render(); return; }
-    if (b.dataset.level !== undefined) { level = +b.dataset.level; render(); return; }
+    if (b.dataset.level !== undefined) { level = +b.dataset.level; levelChosen = true; render(); return; }
+    if (b.dataset.flevel !== undefined) { level = +b.dataset.flevel; levelChosen = true; render(); return; }
+    if (b.dataset.tag) { tags.has(b.dataset.tag) ? tags.delete(b.dataset.tag) : tags.add(b.dataset.tag); render(); return; }
     if (b.dataset.faq !== undefined) { const i = +b.dataset.faq; faqOpen = faqOpen === i ? -1 : i; render(); return; }
     if (b.dataset.fmt !== undefined) { fmtSel = +b.dataset.fmt; render(); return; }
     if (b.dataset.time !== undefined) { timeSel = +b.dataset.time; render(); return; }
